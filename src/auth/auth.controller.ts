@@ -17,7 +17,12 @@ export class AuthController {
   }
 
   @Post('login')
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  async login(@Body() dto: LoginDto) {
+    try {
+      return await this.authService.login(dto);
+    } catch (error) {
+      console.error('Login controller error:', error);
+      throw error;
+    }
   }
 }

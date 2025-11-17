@@ -12,15 +12,27 @@ export class AuthService {
   ) {}
 
   async login(dto: LoginDto) {
-    const user = await this.usersService.findByEmail(dto.email);
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    try {
+      const user = await this.usersService.findByEmail(dto.email);
+      if (!user) throw new UnauthorizedException('Invalid credentials');
 
-    const valid = await bcrypt.compare(dto.password, user.password);
-    if (!valid) throw new UnauthorizedException('Invalid credentials');
+      const valid = await bcrypt.compare(dto.password, user.password);
+      if (!valid) throw new UnauthorizedException('Invalid credentials');
 
-    const payload = { sub: user._id, email: user.email };
-    const token = this.jwt.sign(payload);
+      const payload = {
+        sub: user._id?.toString() || user._id,
+        email: user.email,
+      };
+      const token = this.jwt.sign(payload);
 
-    return { access_token: token };
+      return { access_token: token };
+    } catch (error) {
+      console.error('Login error:', error);
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      throw new Error(`Login failed: ${error.message}`);
+    }
   }
 }
